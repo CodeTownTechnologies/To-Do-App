@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 let instance = axios.create({
-    baseURL: process.env.API_URL,
+    baseURL: 'http://127.0.0.1:3333/',
 });
 
 export const apiConfig = instance

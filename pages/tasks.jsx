@@ -1,27 +1,35 @@
-import { useRouter } from "next/router";
 import React from "react";
-import { Button, ButtonGroup, Col, ListGroup, Row } from "react-bootstrap";
+import {
+  Alert,
+  Button,
+  ButtonGroup,
+  Col,
+  ListGroup,
+  Row,
+} from "react-bootstrap";
 import Layout from "../component/layout";
 import { apiConfig } from "../utils/api";
+import { useRouter } from "next/router";
 
 const Index = () => {
   const router = useRouter();
-  const [categories, setCategories] = React.useState([]);
+  const [tasks, setTasks] = React.useState([]);
+  const [message, setMessage] = React.useState("");
 
   React.useEffect(() => {
     getData();
   }, []);
 
   const getData = async () => {
-    await apiConfig.get("categories").then((response) => {
+    await apiConfig.get("tasks").then((response) => {
       if (response.status == 200) {
-        setCategories(response.data);
+        setTasks(response.data);
       }
     });
   };
 
   const deleteData = async (id) => {
-    await apiConfig.delete(`categories/${id}`).then((response) => {
+    await apiConfig.delete(`tasks/${id}`).then((response) => {
       if (response.status == 200) {
         setMessage(response.data.message);
         getData();
@@ -29,16 +37,15 @@ const Index = () => {
     });
   };
 
-
   const editData = (id) => {
     router.push({
-      pathname: "/category/[id]",
+      pathname: "/task/[id]",
       query: { id: id },
     });
   };
   const addData = () => {
     router.push({
-      pathname: "/category/[id]",
+      pathname: "/task/[id]",
       query: { id: 'new' },
     });    
   };
@@ -47,16 +54,22 @@ const Index = () => {
     <Layout>
       <Row style={{ marginTop: 20, marginBottom: 20 }}>
         <Col md={10}>
-          <h1>Categories</h1>
+          <h1>Tasks</h1>
         </Col>
         <Col md={2}>
-        <Button onClick={() => addData()}>Add</Button>
+          <Button onClick={() => addData()}>Add</Button>
         </Col>
       </Row>
 
+      {message && (
+        <Alert variant="success" onClose={() => setMessage("")} dismissible>
+          {message}
+        </Alert>
+      )}
+
       <ListGroup>
-        {categories &&
-          categories.map((category) => {
+        {tasks &&
+          tasks.map((category) => {
             return (
               <ListGroup.Item>
                 <Row>
@@ -65,7 +78,7 @@ const Index = () => {
                     <p>{category.created_at}</p>
                   </Col>
                   <Col md={2}>
-                  <ButtonGroup>
+                    <ButtonGroup>
                       <Button onClick={() => editData(category.id)}>
                         Edit
                       </Button>
