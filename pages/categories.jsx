@@ -1,34 +1,49 @@
 import { useRouter } from "next/router";
 import React from "react";
-import { Button, ButtonGroup, Col, ListGroup, Row } from "react-bootstrap";
+import {
+  Button,
+  ButtonGroup,
+  Col,
+  ListGroup,
+  Row,
+  Alert,
+} from "react-bootstrap";
 import Layout from "../component/layout";
 import { apiConfig } from "../utils/api";
+import { connect } from "react-redux";
+import { crudActions } from "../utils/redux/actions";
 
-const Index = () => {
+const Index = (props) => {
+  const { categories } = props;
   const router = useRouter();
-  const [categories, setCategories] = React.useState([]);
+  const [message, setMessage] = React.useState("");
+  const [error, setError] = React.useState("");
 
-  React.useEffect(() => {
-    getData();
+  React.useEffect(() => {    
+      getData();    
   }, []);
 
   const getData = async () => {
-    await apiConfig.get("categories").then((response) => {
-      if (response.status == 200) {
-        setCategories(response.data);
-      }
-    });
+    // get categories from redux if null
+    await props.getAllData("categories", "categories");
   };
 
   const deleteData = async (id) => {
-    await apiConfig.delete(`categories/${id}`).then((response) => {
-      if (response.status == 200) {
-        setMessage(response.data.message);
-        getData();
-      }
-    });
+    await apiConfig
+      .delete(`categories/${id}`)
+      .then((response) => {
+        if (response.status == 200) {
+          setMessage(response.data.message);
+          getData();
+        } else {
+          setError(response.data.message);
+        }
+      })
+      .catch((error) => {
+        const { response } = error;
+        setError(response.data.message);
+      });
   };
-
 
   const editData = (id) => {
     router.push({
@@ -39,8 +54,8 @@ const Index = () => {
   const addData = () => {
     router.push({
       pathname: "/category/[id]",
-      query: { id: 'new' },
-    });    
+      query: { id: "new" },
+    });
   };
 
   return (
@@ -50,9 +65,20 @@ const Index = () => {
           <h1>Categories</h1>
         </Col>
         <Col md={2}>
-        <Button onClick={() => addData()}>Add</Button>
+          <Button onClick={() => addData()}>Add</Button>
         </Col>
       </Row>
+
+      {message && (
+        <Alert variant="success" onClose={() => setMessage("")} dismissible>
+          {message}
+        </Alert>
+      )}
+      {error && (
+        <Alert variant="danger" onClose={() => setError("")} dismissible>
+          {error}
+        </Alert>
+      )}
 
       <ListGroup>
         {categories &&
@@ -65,7 +91,7 @@ const Index = () => {
                     <p>{category.created_at}</p>
                   </Col>
                   <Col md={2}>
-                  <ButtonGroup>
+                    <ButtonGroup>
                       <Button onClick={() => editData(category.id)}>
                         Edit
                       </Button>
@@ -86,4 +112,12 @@ const Index = () => {
   );
 };
 
-export default Index;
+const mapStateToProps = (state) => ({
+  categories: state.categories,
+});
+
+const mapDispatchToProps = {
+  getAllData: crudActions._getAll,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Index);

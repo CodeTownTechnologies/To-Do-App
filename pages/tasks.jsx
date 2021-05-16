@@ -11,30 +11,40 @@ import Layout from "../component/layout";
 import { apiConfig } from "../utils/api";
 import { useRouter } from "next/router";
 
-const Index = () => {
-  const router = useRouter();
-  const [tasks, setTasks] = React.useState([]);
-  const [message, setMessage] = React.useState("");
+import { connect } from "react-redux";
+import { crudActions } from "../utils/redux/actions";
 
-  React.useEffect(() => {
-    getData();
+
+const Index = (props) => {
+  const { tasks } = props;
+  const router = useRouter();
+  const [message, setMessage] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {    
+      getData();    
   }, []);
 
   const getData = async () => {
-    await apiConfig.get("tasks").then((response) => {
-      if (response.status == 200) {
-        setTasks(response.data);
-      }
-    });
+    // get tasks from redux if null
+    await props.getAllData("tasks", "tasks");    
   };
 
   const deleteData = async (id) => {
-    await apiConfig.delete(`tasks/${id}`).then((response) => {
-      if (response.status == 200) {
-        setMessage(response.data.message);
-        getData();
-      }
-    });
+    await apiConfig
+      .delete(`tasks/${id}`)
+      .then((response) => {
+        if (response.status == 200) {
+          getData();
+          setMessage(response.data.message);
+        } else {
+          setError(response.data.message);
+        }
+      })
+      .catch((error) => {
+        const { response } = error;
+        setError(response.data.message);
+      });
   };
 
   const editData = (id) => {
@@ -64,6 +74,11 @@ const Index = () => {
       {message && (
         <Alert variant="success" onClose={() => setMessage("")} dismissible>
           {message}
+        </Alert>
+      )}
+      {error && (
+        <Alert variant="danger" onClose={() => setError("")} dismissible>
+          {error}
         </Alert>
       )}
 
@@ -99,4 +114,12 @@ const Index = () => {
   );
 };
 
-export default Index;
+const mapStateToProps = (state) => ({
+  tasks: state.tasks,
+});
+
+const mapDispatchToProps = {
+  getAllData: crudActions._getAll,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Index);

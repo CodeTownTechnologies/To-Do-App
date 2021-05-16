@@ -3,9 +3,11 @@ import { connect } from "react-redux";
 import { crudActions } from "../utils/redux/actions";
 import { useEffect } from "react";
 
+
 const Index = (props) => {
   useEffect(() => {
     props.getAllData("categories", "categories");
+    props.getAllData("tasks", "tasks");
   }, []);
 
   return (
