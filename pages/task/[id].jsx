@@ -5,11 +5,13 @@ import { apiConfig } from "../../utils/api";
 import { useRouter } from "next/router";
 import { useFormik } from "formik";
 import SimpleReactValidator from "simple-react-validator";
+import { connect } from "react-redux";
+import { crudActions } from "../../utils/redux/actions";
 
-const Index = () => {
+const Index = (props) => {
+  const { categories } = props;
   const router = useRouter();
   const { id } = router.query;
-  const [categories, setCategories] = React.useState([]);
 
   const [message, setMessage] = React.useState("");
   const [error, setError] = React.useState("");
@@ -19,18 +21,6 @@ const Index = () => {
       element: (message) => message,
     })
   );
-
-  React.useEffect(() => {
-    getCatData();
-  }, []);
-
-  const getCatData = async () => {
-    await apiConfig.get("categories").then((response) => {
-      if (response.status == 200) {
-        setCategories(response.data);
-      }
-    });
-  };
 
   const getData = async (id) => {
     await apiConfig.get(`tasks/${id}`).then((response) => {
@@ -109,13 +99,17 @@ const Index = () => {
   });
 
   React.useEffect(() => {
+    // get categories from redux if null    
+    if (!categories) {
+      props.getAllData("categories", "categories");
+    }
+  }, []);
+
+  React.useEffect(() => {
     if (id && id !== "new") {
       getData(id);
     }
   }, [id]);
-
-
-  console.log('formik.values.completed',formik.values.completed)
 
   return (
     <Layout>
@@ -201,4 +195,12 @@ const Index = () => {
   );
 };
 
-export default Index;
+const mapStateToProps = (state) => ({
+  categories: state.categories,
+});
+
+const mapDispatchToProps = {
+  getAllData: crudActions._getAll,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Index);

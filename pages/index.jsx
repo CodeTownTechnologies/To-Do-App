@@ -1,6 +1,13 @@
 import Layout from "../component/layout";
+import { connect } from "react-redux";
+import { crudActions } from "../utils/redux/actions";
+import { useEffect } from "react";
 
-const Index = () => {
+const Index = (props) => {
+  useEffect(() => {
+    props.getAllData("categories", "categories");
+  }, []);
+
   return (
     <Layout>
       <h1>Home</h1>
@@ -8,4 +15,12 @@ const Index = () => {
   );
 };
 
-export default Index;
+const mapStateToProps = (state) => ({
+  categories: state.categories,
+});
+
+const mapDispatchToProps = {
+  getAllData: crudActions._getAll,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Index);
